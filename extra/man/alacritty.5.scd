@@ -612,6 +612,7 @@ Options introduced by smooth-cursor fork:
 	every one. This option allows to replace it with any other supported cursor
 	shape (I prefer *underline*).
 
+<<<<<<< HEAD
 *smooth_motion_max_stretch_x* _<float>_
 
 	Limits how much cursor horizontal size may change when moving
@@ -620,6 +621,8 @@ Options introduced by smooth-cursor fork:
 
 	Limits how much cursor vertical size may change when moving
 
+=======
+>>>>>>> 26a9af88 (Implement basic smooth cursor motion smoothing)
 # TERMINAL
 
 This section documents the *[terminal]* table of the configuration file.

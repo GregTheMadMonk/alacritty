@@ -248,7 +248,6 @@ impl ApplicationHandler<Event> for Processor {
         if Self::skip_window_event(&event) {
             return;
         }
-
         let window_context = match self.windows.get_mut(&window_id) {
             Some(window_context) => window_context,
             None => return,
@@ -266,7 +265,28 @@ impl ApplicationHandler<Event> for Processor {
         );
 
         if is_redraw {
-            window_context.draw(&mut self.scheduler);
+            let last_cur = window_context.get_last_cursor();
+
+            window_context.smooth_draw(&mut self.scheduler);
+            // More notes in alacritty\src\window_context.rs line 421
+            // need dirty to run correctly to get the synced diff cursor
+            // Need gas for animation when cursor is moving but user hasnt moved
+            // Need gas on user return and cursor hasnt moved
+            let new_cur = window_context.get_last_cursor();
+            if last_cur != new_cur {
+                // Fig:2
+                window_context.set_moving(true);
+                window_context.set_burnoff(212000);
+                println!("Points are diff {:?} {:?}", last_cur, new_cur);
+            } else if window_context.is_burnt() {
+                if last_cur != new_cur {
+                    window_context.set_burnoff(212000);
+
+                    window_context.set_moving(true);
+                }
+            } else {
+                window_context.set_moving(false);
+            }
         }
     }
 

@@ -42,7 +42,7 @@ impl RenderRect {
         factor: f32,
         spring: f32,
         max_s_x: f32,
-        max_s_y: f32
+        max_s_y: f32,
     ) -> Self {
         let interp = |x: f32, y: f32, f: f32| x * (1.0 - f) + y * f;
 
@@ -57,20 +57,16 @@ impl RenderRect {
         let mut x1 = interp(self.x, other.x, x1_fac);
         let mut y1 = interp(self.y, other.y, y1_fac);
 
-        let mut x2 = interp(
-            self.x + self.width, other.x + other.width, x2_fac
-        );
-        let mut y2 = interp(
-            self.y + self.height, other.y + other.height, y2_fac
-        );
+        let mut x2 = interp(self.x + self.width, other.x + other.width, x2_fac);
+        let mut y2 = interp(self.y + self.height, other.y + other.height, y2_fac);
 
-        let width     = x2 - x1;
+        let width = x2 - x1;
         let max_width = other.width * max_s_x;
 
-        let height     = y2 - y1;
+        let height = y2 - y1;
         let max_height = other.height * max_s_y;
 
-        let width  = if width  > max_width  { max_width  } else { width  };
+        let width = if width > max_width { max_width } else { width };
         let height = if height > max_height { max_height } else { height };
 
         if dx < 0.0 {
@@ -86,9 +82,13 @@ impl RenderRect {
         }
 
         RenderRect {
-            x: x1, y: y1, width: x2 - x1, height: y2 - y1,
-            color: other.color, alpha: other.alpha,
-            kind: other.kind
+            x: x1,
+            y: y1,
+            width: x2 - x1,
+            height: y2 - y1,
+            color: other.color,
+            alpha: other.alpha,
+            kind: other.kind,
         }
     }
 }
@@ -375,7 +375,8 @@ impl RectRenderer {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         }
 
-        let programs = [inverting_program, rect_program, undercurl_program, dotted_program, dashed_program];
+        let programs =
+            [inverting_program, rect_program, undercurl_program, dotted_program, dashed_program];
         Ok(Self { vao, vbo, programs, vertices: Default::default() })
     }
 

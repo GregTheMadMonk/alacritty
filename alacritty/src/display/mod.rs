@@ -849,20 +849,17 @@ impl Display {
 
         // Draw cursor.
         let block_rep_shape = config.cursor.block_replace_shape().map(|x| x.shape);
-        let new_cur_rects =
-            cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape);
+        let new_cur_rects = cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape);
         if config.cursor.smooth_motion {
             match self.cursor_rects {
-                None =>
-                    self.cursor_rects = Some(new_cur_rects),
-                Some(ref mut crcts) =>
-                    crcts.interpolate(
-                        &new_cur_rects,
-                        config.cursor.smooth_motion_factor,
-                        config.cursor.smooth_motion_spring,
-                        config.cursor.smooth_motion_max_stretch_x,
-                        config.cursor.smooth_motion_max_stretch_y
-                    ),
+                None => self.cursor_rects = Some(new_cur_rects),
+                Some(ref mut crcts) => crcts.interpolate(
+                    &new_cur_rects,
+                    config.cursor.smooth_motion_factor,
+                    config.cursor.smooth_motion_spring,
+                    config.cursor.smooth_motion_max_stretch_x,
+                    config.cursor.smooth_motion_max_stretch_y,
+                ),
             };
         } else {
             self.cursor_rects = Some(new_cur_rects);
@@ -907,7 +904,11 @@ impl Display {
                     let cursor_width = NonZeroU32::new(1).unwrap();
                     let cursor =
                         RenderableCursor::new(Point::new(line, column), shape, fg, cursor_width);
-                    rects.extend(cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape));
+                    rects.extend(cursor.rects(
+                        &size_info,
+                        config.cursor.thickness(),
+                        block_rep_shape,
+                    ));
                 }
 
                 Some(Point::new(line, column))
