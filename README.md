@@ -18,7 +18,7 @@ Available in AUR: https://aur.archlinux.org/packages/alacritty-smooth-cursor-git
 
 ## Known issues
 
-* When I tried running this with Waylad, I got a lot of artifacts and it didn't
+* When I tried running this with Wayland, I got a lot of artifacts and it didn't
   update as smooth in general. Running via XWayland (`env -u WAYLAND_DISPLAY alacritty`)
   works though
 * Currently redraws are dumb and update the window every frame even if nothing
