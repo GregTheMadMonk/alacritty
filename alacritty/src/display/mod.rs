@@ -736,6 +736,7 @@ impl Display {
         search_state: &mut SearchState,
     ) {
         // Collect renderable content before the terminal is dropped.
+
         let mut content = RenderableContent::new(config, self, &terminal, search_state);
         let mut grid_cells = Vec::new();
         for cell in &mut content {
