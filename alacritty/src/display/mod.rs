@@ -735,9 +735,8 @@ impl Display {
         config: &UiConfig,
         search_state: &mut SearchState,
     ) {
-        // Collect renderable content before the terminal is dropped.
-
         let mut content = RenderableContent::new(config, self, &terminal, search_state);
+
         let mut grid_cells = Vec::new();
         for cell in &mut content {
             grid_cells.push(cell);
@@ -749,6 +748,7 @@ impl Display {
         let cursor = content.cursor();
 
         let cursor_point = terminal.grid().cursor.point;
+
         let total_lines = terminal.grid().total_lines();
         let metrics = self.glyph_cache.font_metrics();
         let size_info = self.size_info;
