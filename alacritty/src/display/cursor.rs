@@ -70,8 +70,6 @@ impl CursorRects {
         max_s_x: f32,
         max_s_y: f32,
     ) {
-        println!("AGGGG");
-
         for (mine, theirs) in self.rects.iter_mut().zip(other.rects.iter()) {
             *mine = match &mine {
                 Some(mine_v) => match theirs {
