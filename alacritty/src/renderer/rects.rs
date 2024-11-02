@@ -42,10 +42,8 @@ impl RenderRect {
         factor: f32,
         spring: f32,
         max_s_x: f32,
-        max_s_y: f32
+        max_s_y: f32,
     ) -> Self {
-        let interp = |x: f32, y: f32, f: f32| x * (1.0 - f) + y * f;
-
         let dx = other.x - self.x;
         let dy = other.y - self.y;
 
@@ -54,41 +52,26 @@ impl RenderRect {
         let x2_fac = factor * if dx > 0.0 { 1.0 } else { spring };
         let y2_fac = factor * if dy > 0.0 { 1.0 } else { spring };
 
-        let mut x1 = interp(self.x, other.x, x1_fac);
-        let mut y1 = interp(self.y, other.y, y1_fac);
+        let x1 = self.x * (1.0 - x1_fac) + other.x * x1_fac;
+        let y1 = self.y * (1.0 - y1_fac) + other.y * y1_fac;
 
-        let mut x2 = interp(
-            self.x + self.width, other.x + other.width, x2_fac
-        );
-        let mut y2 = interp(
-            self.y + self.height, other.y + other.height, y2_fac
-        );
+        let x2 = (self.x + self.width) * (1.0 - x2_fac) + (other.x + other.width) * x2_fac;
+        let y2 = (self.y + self.height) * (1.0 - y2_fac) + (other.y + other.height) * y2_fac;
 
-        let width     = x2 - x1;
-        let max_width = other.width * max_s_x;
+        let width = f32::min(x2 - x1, other.width * max_s_x);
+        let height = f32::min(y2 - y1, other.height * max_s_y);
 
-        let height     = y2 - y1;
-        let max_height = other.height * max_s_y;
-
-        let width  = if width  > max_width  { max_width  } else { width  };
-        let height = if height > max_height { max_height } else { height };
-
-        if dx < 0.0 {
-            x1 = x2 - width;
-        } else {
-            x2 = x1 + width;
-        }
-
-        if dy < 0.0 {
-            y1 = y2 - height;
-        } else {
-            y2 = y1 + height;
-        }
+        let x1 = if dx < 0.0 { x2 - width } else { x1 };
+        let y1 = if dy < 0.0 { y2 - height } else { y1 };
 
         RenderRect {
-            x: x1, y: y1, width: x2 - x1, height: y2 - y1,
-            color: other.color, alpha: other.alpha,
-            kind: other.kind
+            x: x1,
+            y: y1,
+            width,
+            height,
+            color: other.color,
+            alpha: other.alpha,
+            kind: other.kind,
         }
     }
 }
@@ -375,7 +358,8 @@ impl RectRenderer {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         }
 
-        let programs = [inverting_program, rect_program, undercurl_program, dotted_program, dashed_program];
+        let programs =
+            [inverting_program, rect_program, undercurl_program, dotted_program, dashed_program];
         Ok(Self { vao, vbo, programs, vertices: Default::default() })
     }
 

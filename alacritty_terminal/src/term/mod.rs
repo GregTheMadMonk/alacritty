@@ -222,7 +222,7 @@ struct TermDamageState {
     lines: Vec<LineDamageBounds>,
 
     /// Old terminal cursor point.
-    last_cursor: Point,
+    pub last_cursor: Point,
 }
 
 impl TermDamageState {
@@ -443,7 +443,9 @@ impl<T> Term<T> {
             mode: Default::default(),
         }
     }
-
+    pub fn get_last_cursor_pos(&self) -> Point {
+        self.damage.last_cursor
+    }
     /// Collect the information about the changes in the lines, which
     /// could be used to minimize the amount of drawing operations.
     ///

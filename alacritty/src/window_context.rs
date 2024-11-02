@@ -23,7 +23,7 @@ use winit::window::WindowId;
 use alacritty_terminal::event::Event as TerminalEvent;
 use alacritty_terminal::event_loop::{EventLoop as PtyEventLoop, Msg, Notifier};
 use alacritty_terminal::grid::{Dimensions, Scroll};
-use alacritty_terminal::index::Direction;
+use alacritty_terminal::index::{Direction, Point};
 use alacritty_terminal::sync::FairMutex;
 use alacritty_terminal::term::test::TermSize;
 use alacritty_terminal::term::{Term, TermMode};
@@ -65,6 +65,8 @@ pub struct WindowContext {
     shell_pid: u32,
     window_config: ParsedOptions,
     config: Rc<UiConfig>,
+    moving: bool,
+    burnoff: i32,
 }
 
 impl WindowContext {
@@ -115,6 +117,27 @@ impl WindowContext {
         let display = Display::new(window, gl_context, &config, false)?;
 
         Self::new(display, config, options, proxy)
+    }
+    pub fn set_moving(&mut self, state: bool) {
+        self.moving = state
+    }
+    pub fn is_moving(&self) -> bool {
+        self.moving
+    }
+    pub fn is_burnt(&self) -> bool {
+        self.burnoff <= 0
+    }
+    pub fn set_burnoff(&mut self, duration: i32) {
+        self.burnoff = duration
+    }
+
+    pub fn decrease_burnoff(&mut self, duration: i32) {
+        self.burnoff -= duration
+    }
+    pub fn get_last_cursor(&mut self) -> Point {
+        self.display.window.requested_redraw = false;
+
+        self.terminal.lock().grid().cursor.point
     }
 
     /// Create additional context with the graphics platform other windows are using.
@@ -252,6 +275,8 @@ impl WindowContext {
             mouse: Default::default(),
             touch: Default::default(),
             dirty: Default::default(),
+            moving: false,
+            burnoff: 212000,
         })
     }
 
@@ -354,15 +379,26 @@ impl WindowContext {
         self.update_config(config);
     }
 
-    /// Draw the window.
-    pub fn draw(&mut self, scheduler: &mut Scheduler) {
+    // Draw the window
+    pub fn smooth_draw(&mut self, scheduler: &mut Scheduler) {
         self.display.window.requested_redraw = false;
 
         if self.occluded {
             return;
         }
 
-        if !self.config.cursor.smooth_motion { self.dirty = false; }
+        if !self.is_burnt() && self.is_moving() {
+            self.dirty = true;
+        } else if !self.is_burnt() {
+            self.dirty = true;
+            self.decrease_burnoff(2000);
+        } else if self.is_moving() && self.is_burnt() {
+            self.dirty = true;
+            self.decrease_burnoff(2000);
+        } else {
+            self.dirty = false;
+            self.set_burnoff(212000);
+        }
 
         // Force the display to process any pending display update.
         self.display.process_renderer_update();
@@ -388,7 +424,6 @@ impl WindowContext {
             &mut self.search_state,
         );
     }
-
     /// Process events for this terminal window.
     pub fn handle_event(
         &mut self,

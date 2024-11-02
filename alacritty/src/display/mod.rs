@@ -735,8 +735,8 @@ impl Display {
         config: &UiConfig,
         search_state: &mut SearchState,
     ) {
-        // Collect renderable content before the terminal is dropped.
         let mut content = RenderableContent::new(config, self, &terminal, search_state);
+
         let mut grid_cells = Vec::new();
         for cell in &mut content {
             grid_cells.push(cell);
@@ -748,6 +748,7 @@ impl Display {
         let cursor = content.cursor();
 
         let cursor_point = terminal.grid().cursor.point;
+
         let total_lines = terminal.grid().total_lines();
         let metrics = self.glyph_cache.font_metrics();
         let size_info = self.size_info;
@@ -849,20 +850,25 @@ impl Display {
 
         // Draw cursor.
         let block_rep_shape = config.cursor.block_replace_shape().map(|x| x.shape);
-        let new_cur_rects =
-            cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape);
+        let new_cur_rects = cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape);
         if config.cursor.smooth_motion {
             match self.cursor_rects {
-                None =>
-                    self.cursor_rects = Some(new_cur_rects),
-                Some(ref mut crcts) =>
+                None => {
+                    self.cursor_rects = {
+                        println!("not inter[");
+                        Some(new_cur_rects)
+                    }
+                },
+                Some(ref mut crcts) => {
+                    println!("not inter[");
                     crcts.interpolate(
                         &new_cur_rects,
                         config.cursor.smooth_motion_factor,
                         config.cursor.smooth_motion_spring,
                         config.cursor.smooth_motion_max_stretch_x,
-                        config.cursor.smooth_motion_max_stretch_y
-                    ),
+                        config.cursor.smooth_motion_max_stretch_y,
+                    )
+                },
             };
         } else {
             self.cursor_rects = Some(new_cur_rects);
@@ -907,7 +913,11 @@ impl Display {
                     let cursor_width = NonZeroU32::new(1).unwrap();
                     let cursor =
                         RenderableCursor::new(Point::new(line, column), shape, fg, cursor_width);
-                    rects.extend(cursor.rects(&size_info, config.cursor.thickness(), block_rep_shape));
+                    rects.extend(cursor.rects(
+                        &size_info,
+                        config.cursor.thickness(),
+                        block_rep_shape,
+                    ));
                 }
 
                 Some(Point::new(line, column))
