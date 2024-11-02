@@ -130,9 +130,7 @@ impl WindowContext {
     pub fn set_burnoff(&mut self, duration: i32) {
         self.burnoff = duration
     }
-    pub fn get_burnoff(&self) -> i32 {
-        self.burnoff
-    }
+
     pub fn decrease_burnoff(&mut self, duration: i32) {
         self.burnoff -= duration
     }
@@ -381,53 +379,8 @@ impl WindowContext {
         self.update_config(config);
     }
 
-    /// Draw the window.
-    pub fn draw(&mut self, scheduler: &mut Scheduler) {
-        self.display.window.requested_redraw = false;
-
-        if self.occluded {
-            return;
-        }
-
-        if !self.config.cursor.smooth_motion {
-            self.dirty = false;
-        }
-
-        // Force the display to process any pending display update.
-        self.display.process_renderer_update();
-
-        // Request immediate re-draw if visual bell animation is not finished yet.
-        if !self.display.visual_bell.completed() {
-            // We can get an OS redraw which bypasses alacritty's frame throttling, thus
-            // marking the window as dirty when we don't have frame yet.
-            if self.display.window.has_frame {
-                self.display.window.request_redraw();
-            } else {
-                self.dirty = true;
-            }
-        }
-
-        // Redraw the window.
-        let terminal = self.terminal.lock();
-        self.display.draw(
-            terminal,
-            scheduler,
-            &self.message_buffer,
-            &self.config,
-            &mut self.search_state,
-        );
-    }
-
+    // Draw the window
     pub fn smooth_draw(&mut self, scheduler: &mut Scheduler) {
-        // More notes in alacritty\src\event.rs line 1708
-        // This class starts with a burn buffer for the startup cursor animation
-        // We decrease burn while idle
-
-        // But we also need to add more 'gas'(burn) on user input as the cursor jumps to col 0. This is so the off idle animation completes Fig:1
-        // Stuck here: how can we know
-
-        // We also dont get access to intermediary frames so sometimes we dont know if the cursor has moved Fig:2
-
         self.display.window.requested_redraw = false;
 
         if self.occluded {
@@ -438,14 +391,10 @@ impl WindowContext {
             self.dirty = true;
         } else if !self.is_burnt() {
             self.dirty = true;
-
             self.decrease_burnoff(2000);
-            println!("Decreasing {:?}", self.get_burnoff());
         } else if self.is_moving() && self.is_burnt() {
             self.dirty = true;
             self.decrease_burnoff(2000);
-            println!("Decreasing {:?}", self.get_burnoff());
-            println!("temp");
         } else {
             self.dirty = false;
             self.set_burnoff(212000);
